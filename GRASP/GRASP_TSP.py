@@ -51,7 +51,7 @@ algorithmName = "GRASP"
 print("Best Sol by " + algorithmName + " ...")
 
 # Problem configuration
-inputsTSP = berlin52
+inputsTSP = baig
 maxIterations = 100
 maxNoImprove = 50
 greedinessFactor = 0.3  # In the range [0,1]. 0 is more greedy and 1 less greedy
