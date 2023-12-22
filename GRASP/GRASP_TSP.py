@@ -51,10 +51,10 @@ algorithmName = "GRASP"
 print("Best Sol by " + algorithmName + " ...")
 
 # Problem configuration
-inputsTSP = baig
-maxIterations = 100
+inputsTSP = berlin52
+maxIterations = 10000
 maxNoImprove = 50
-greedinessFactor = 0.3  # In the range [0,1]. 0 is more greedy and 1 less greedy
+greedinessFactor = 0.14  # In the range [0,1]. 0 is more greedy and 1 less greedy
 start = time.time()
 
 # Main Loop
