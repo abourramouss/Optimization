@@ -25,22 +25,17 @@ def gaussianProbability(x, mu, sigma):
     )
 
 
-def biasedRandomSelectionGaussian(distances):
+def biasedRandomSelectionGaussian(distances, alpha):
     mu = sum(distances) / len(distances)
-    variance = sum((x - mu) ** 2 for x in distances) / len(distances)
-    sigma = math.sqrt(variance)
-
-    # Ensure sigma is not zero to avoid division by zero
+    sigma = math.sqrt(sum((x - mu) ** 2 for x in distances) / len(distances))
     if sigma == 0:
-        sigma = 0.0001  # A small positive number
+        sigma = 0.0001  # Avoid division by zero
     probabilities = [gaussianProbability(d, mu, sigma) for d in distances]
-    total = sum(probabilities)
-    probabilities = [p / total for p in probabilities]
-
+    probabilities = [p / sum(probabilities) for p in probabilities]  # Normalize
     return random.choices(range(len(probabilities)), probabilities, k=1)[0]
 
 
-def constructGreedySolutionWithBRAs(perm):
+def constructGreedySolutionWithBRAs(perm, alpha, biasedSelectionFunction):
     emergingSol = [perm[random.randrange(0, len(perm))]]
     problemSize = len(perm)
 
@@ -48,11 +43,19 @@ def constructGreedySolutionWithBRAs(perm):
         notInSolNodes = [node for node in perm if node not in emergingSol]
         distances = [euclideanDistance(emergingSol[-1], node) for node in notInSolNodes]
 
-        nextNodeIndex = biasedRandomSelectionGaussian(distances)
+        # Use the provided biasedSelectionFunction to choose the next node
+        nextNodeIndex = biasedSelectionFunction(distances, alpha)
         emergingSol.append(notInSolNodes[nextNodeIndex])
 
     newCost = tourCost(emergingSol)
     return emergingSol, newCost
+
+
+def biasedRandomSelectionExponential(distances, alpha):
+    weights = [math.exp(-alpha * d) for d in distances]
+    total_weight = sum(weights)
+    probabilities = [w / total_weight for w in weights]
+    return random.choices(range(len(probabilities)), probabilities, k=1)[0]
 
 
 def constructGreedySolution(perm, alpha):
@@ -94,16 +97,14 @@ greedinessFactor = 0.30  # In the range [0,1]. 0 is more greedy and 1 less greed
 
 
 def runGaussianBRAsGRASP(maxIterations, maxNoImprove, greedinessFactor):
-    # Problem configuration
-
     start = time.time()
-
-    # Main Loop
     bestCost = float("inf")  # infinity
     while maxIterations > 0:
         maxIterations -= 1
-        # Construct greedy solution
-        newSol, newCost = constructGreedySolutionWithBRAs(inputsTSP)
+        # Construct greedy solution using Gaussian BRAs
+        newSol, newCost = constructGreedySolutionWithBRAs(
+            inputsTSP, greedinessFactor, biasedRandomSelectionGaussian
+        )
         # refine it using a local search heuristic
         newSol, newCost = localSearch(newSol, newCost, maxNoImprove)
         if newCost < bestCost:
@@ -140,11 +141,36 @@ def runOriginalGRASP(maxIterations, maxNoImprove, greedinessFactor):
     return bestCost, exec_time
 
 
+def runExponentialGRASP(maxIterations, maxNoImprove, greedinessFactor):
+    start_time = time.time()
+    bestCost = float("inf")
+
+    while maxIterations > 0:
+        maxIterations -= 1
+        # Construct greedy solution using Exponential BRAs
+        newSol, newCost = constructGreedySolutionWithBRAs(
+            inputsTSP, greedinessFactor, biasedRandomSelectionExponential
+        )
+        # Refine it using a local search heuristic
+        newSol, newCost = localSearch(newSol, newCost, maxNoImprove)
+        if newCost < bestCost:
+            bestSol = newSol
+            bestCost = newCost
+        print("Cost = %.2f; Iter = %d" % (bestCost, maxIterations))
+
+    stop_time = time.time()
+    exec_time = stop_time - start_time
+    print("BestCost EXPONENTIAL = %.2f; Elapsed = %.2fs" % (bestCost, exec_time))
+    return bestCost, exec_time
+
+
 num_runs = 30  # Number of runs for each version
 original_costs = []
 original_times = []
 gaussian_costs = []
 gaussian_times = []
+exponential_costs = []
+exponential_times = []
 
 for _ in range(num_runs):
     cost, exec_time = runOriginalGRASP(maxIterations, maxNoImprove, greedinessFactor)
@@ -157,17 +183,26 @@ for _ in range(num_runs):
     gaussian_costs.append(cost)
     gaussian_times.append(exec_time)
 
+    cost, exec_time = runExponentialGRASP(maxIterations, maxNoImprove, greedinessFactor)
+    exponential_costs.append(cost)
+    exponential_times.append(exec_time)
 
 # Plot for Solution Quality
 plt.figure()
-plt.boxplot([original_costs, gaussian_costs], labels=["Original", "Gaussian BRAs"])
+plt.boxplot(
+    [original_costs, gaussian_costs, exponential_costs],
+    labels=["Original", "Gaussian BRAs", "Exponential BRAs"],
+)
 plt.title("Solution Quality Comparison")
 plt.ylabel("Tour Cost")
-plt.savefig("solution_quality_comparison.png")
+plt.savefig("solution_quality_comparison_all.png")
 
-# Plot for Computational Efficiency
+# Computational Efficiency Comparison Plot
 plt.figure()
-plt.boxplot([original_times, gaussian_times], labels=["Original", "Gaussian BRAs"])
+plt.boxplot(
+    [original_times, gaussian_times, exponential_times],
+    labels=["Original", "Gaussian BRAs", "Exponential BRAs"],
+)
 plt.title("Computational Efficiency Comparison")
 plt.ylabel("Execution Time (s)")
-plt.savefig("computational_efficiency_comparison.png")
+plt.savefig("computational_efficiency_comparison_all.png")
