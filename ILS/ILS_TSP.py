@@ -6,7 +6,11 @@ from Shared import (
     tourCost,
     stochasticTwoOpt,
     constructInitialSolution,
+    stochasticDistance,
+    stochasticTourCost,
 )
+
+import matplotlib.pyplot as plt
 
 
 def perturbation(aSol):
@@ -59,29 +63,51 @@ def localSearch(aSol, aCost, maxIter):
     return aSol, aCost
 
 
-algorithmName = "ILS"
-print(f"Best Sol by {algorithmName}")
+def run_ils(inputsTSP, maxIterations, maxNoImprove):
+    start = time.time()
+    bestSol = constructInitialSolution(inputsTSP)
+    bestCost = stochasticTourCost(bestSol)
+    bestSol, bestCost = localSearch(bestSol, bestCost, maxNoImprove)
 
+    costs_over_time = []  # To track the cost at each iteration
+
+    while maxIterations > 50:
+        maxIterations -= 1
+        newSol, newCost = perturbation(bestSol)
+
+        newSol, newCost = localSearch(newSol, newCost, maxNoImprove)
+        if newCost < bestCost:
+            bestSol, bestCost = newSol, newCost
+
+        costs_over_time.append(bestCost)  # Track the best cost
+
+    stop = time.time()
+    print(f"Cost = {bestCost}, sol = {bestSol}, elapsed = {stop - start}")
+    return costs_over_time
+
+
+def plot_multiple_costs(all_costs, title="Cost Evolution Across Runs"):
+    plt.figure(figsize=(10, 6))
+    for i, costs in enumerate(all_costs):
+        plt.plot(costs, label=f"Run {i+1}")
+    plt.title(title)
+    plt.xlabel("Iteration")
+    plt.ylabel("Cost")
+    plt.legend()
+    plt.show()
+
+
+# Parameters for the ILS
 inputsTSP = bays29
 maxIterations = 10000
 maxNoImprove = 50
 
-start = time.time()
+# Run the ILS multiple times and store cost evolutions
+num_runs = 3
+all_run_costs = []
+for run in range(num_runs):
+    costs_over_time = run_ils(inputsTSP, maxIterations, maxNoImprove)
+    all_run_costs.append(costs_over_time)
 
-bestSol = constructInitialSolution(inputsTSP)
-bestCost = tourCost(bestSol)
-
-bestSol, bestCost = localSearch(bestSol, bestCost, maxNoImprove)
-
-while maxIterations > 50:
-    maxIterations -= 1
-    newSol, newCost = perturbation(bestSol)
-
-    newSol, newCost = localSearch(newSol, newCost, maxNoImprove)
-    if newCost < bestCost:
-        bestSol, bestCost = newSol, newCost
-        print(bestCost, maxIterations)
-
-stop = time.time()
-
-print(f"Cost = {bestCost}, sol = {bestSol}, elapsed = {stop - start}")
+# Plotting the cost evolution of all runs together
+plot_multiple_costs(all_run_costs)

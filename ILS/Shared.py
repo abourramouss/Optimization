@@ -181,3 +181,23 @@ def euclideanDistance(xNode, yNode):
     for xi, yi in zip(xNode, yNode):
         sum += pow((xi - yi), 2)
     return math.sqrt(sum)
+
+
+def stochasticDistance(xNode, yNode):
+    base_distance = euclideanDistance(xNode, yNode)
+    stochastic_variation = random.uniform(0.9, 1.1) 
+    return base_distance * stochastic_variation
+
+
+def stochasticTourCost(perm):
+    totalDistance = 0.0
+    size = len(perm)
+    for index in range(size):
+        startNode = perm[index]
+        if index == size - 1:
+            endNode = perm[0]
+        else:
+            endNode = perm[index + 1]
+
+        totalDistance += stochasticDistance(startNode, endNode)
+    return totalDistance
