@@ -1,0 +1,11 @@
+# https://jump.dev/JuMP.jl/stable/tutorials/nonlinear/portfolio/
+# optimal risk: 0.022634
+# optimal sol:  0.4970, 0.0000, 0.5030
+# target_return:
+0.050
+# returns, r_i: 
+0.026002150277777348, 0.008101316405671459, 0.07371590949198982
+# covariance matrix, c_ij:
+0.018641, 0.00359853, 0.00130976
+0.00359853, 0.00643694, 0.00488727
+0.00130976, 0.00488727, 0.0686828

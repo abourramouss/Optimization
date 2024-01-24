@@ -1,0 +1,11 @@
+# https://www.lindo.com/downloads/LINGO_text/Chapter13.pdf
+# optimal risk: 0.02241375
+# optimal sol:  0.5301, 0.3564, 0.1135
+# target_return:
+1.15
+# returns, r_i: 
+1.089083, 1.213667, 1.234583 
+# covariance matrix, c_ij:
+0.01080754, 0.01240721, 0.01307513
+0.01240721, 0.05839170, 0.05542639
+0.01307513, 0.05542639, 0.09422681
